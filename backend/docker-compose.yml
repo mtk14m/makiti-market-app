@@ -1,0 +1,93 @@
+
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: makiti-postgres
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-makiti}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-makiti_password}
+      POSTGRES_DB: ${POSTGRES_DB:-makiti_db}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-makiti}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - makiti-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: makiti-redis
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - makiti-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: makiti-minio
+    ports:
+      - "${MINIO_PORT:-9000}:9000"
+      - "${MINIO_CONSOLE_PORT:-9001}:9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin123}
+    command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - makiti-network
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: makiti-api
+    command: poetry run uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "${API_PORT:-8000}:8000"
+    environment:
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-makiti}:${POSTGRES_PASSWORD:-makiti_password}@postgres:5432/${POSTGRES_DB:-makiti_db}
+      - REDIS_URL=redis://redis:6379/0
+      - ENVIRONMENT=development
+      - MINIO_ENDPOINT=minio:9000
+      - MINIO_ACCESS_KEY=${MINIO_ROOT_USER:-minioadmin}
+      - MINIO_SECRET_KEY=${MINIO_ROOT_PASSWORD:-minioadmin123}
+      - MINIO_BUCKET_NAME=${MINIO_BUCKET_NAME:-products}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - makiti-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
+
+networks:
+  makiti-network:
+    driver: bridge
+
