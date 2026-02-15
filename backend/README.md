@@ -2,7 +2,7 @@
 
 Backend API pour l'application Makiti Market, construit avec FastAPI en architecture modular monolith.
 
-## 🏗️ Architecture
+## Architecture
 
 - **Framework**: FastAPI
 - **Architecture**: Modular Monolith
@@ -13,9 +13,9 @@ Backend API pour l'application Makiti Market, construit avec FastAPI en architec
 - **Migrations**: Alembic
 - **Gestion des dépendances**: Poetry
 
-## 📋 Prérequis
+## Prérequis
 
-- Python 3.11 ou 3.12 (⚠️ Python 3.14 n'est pas supporté à cause d'asyncpg)
+- Python 3.11 ou 3.12 (ATTENTION: Python 3.14 n'est pas supporté à cause d'asyncpg)
 - Poetry
 - Docker & Docker Compose
 - PostgreSQL 16+ (via Docker)
@@ -23,7 +23,7 @@ Backend API pour l'application Makiti Market, construit avec FastAPI en architec
 
 > **Note importante** : Ce projet nécessite Python 3.11 ou 3.12. Python 3.14 n'est pas compatible avec `asyncpg`. Voir [SETUP.md](SETUP.md) pour les instructions de configuration.
 
-## 🚀 Installation
+## Installation
 
 ### 1. Installer Poetry
 
@@ -106,7 +106,7 @@ backend/
 └── Makefile              # Commandes utiles
 ```
 
-## 🛠️ Commandes Utiles
+## Commandes Utiles
 
 ### Développement
 
@@ -141,7 +141,7 @@ make docker-logs      # Voir les logs
 make worker           # Démarrer un worker RQ
 ```
 
-## 🧪 Tests
+## Tests
 
 ```bash
 # Tous les tests
@@ -154,7 +154,7 @@ poetry run pytest --cov=app --cov-report=html
 poetry run pytest tests/test_products.py
 ```
 
-## 📝 Linting et Formatage
+## Linting et Formatage
 
 Le projet utilise plusieurs outils pour maintenir la qualité du code :
 
@@ -194,7 +194,7 @@ Principales variables à configurer dans `.env` :
 - `CORS_ORIGINS`: Origines autorisées pour CORS
 - `ENVIRONMENT`: `development`, `staging`, `production`
 
-## 📦 Dépendances Principales
+## Dépendances Principales
 
 - **FastAPI**: Framework web moderne
 - **SQLAlchemy**: ORM asynchrone
@@ -256,7 +256,7 @@ La documentation interactive est disponible via Swagger UI :
 - **Swagger**: http://localhost:8000/docs
 - **ReDoc**: http://localhost:8000/redoc
 
-## 🏗️ Architecture Modular Monolith
+## Architecture Modular Monolith
 
 Le projet suit une architecture modular monolith où chaque module est indépendant :
 
@@ -264,7 +264,7 @@ Le projet suit une architecture modular monolith où chaque module est indépend
 - Les modules communiquent via des interfaces définies
 - Facile à extraire en microservices si nécessaire
 
-## 🚀 Déploiement
+## Déploiement
 
 ### Production
 

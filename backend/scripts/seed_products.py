@@ -240,7 +240,7 @@ async def seed_products():
         count = result.scalar_one()
         
         if count > 0:
-            print(f"⚠️  {count} products already exist. Skipping seed.")
+            print(f"ATTENTION: {count} products already exist. Skipping seed.")
             return
         
         # Create products
@@ -251,14 +251,14 @@ async def seed_products():
             session.add(product)
         
         await session.commit()
-        print(f"✅ Successfully seeded {len(products)} products!")
+        print(f"OK: Successfully seeded {len(products)} products!")
         
         # Print summary
         categories = {}
         for product in products:
             categories[product.category] = categories.get(product.category, 0) + 1
         
-        print("\n📊 Summary by category:")
+        print("\nSummary by category:")
         for category, count in sorted(categories.items()):
             print(f"   - {category}: {count} products")
 

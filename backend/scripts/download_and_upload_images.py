@@ -52,7 +52,7 @@ async def download_image(url: str) -> Optional[bytes]:
             response.raise_for_status()
             return response.content
     except Exception as e:
-        print(f"❌ Erreur lors du téléchargement de {url}: {e}")
+        print(f"ERREUR: Erreur lors du téléchargement de {url}: {e}")
         return None
 
 
@@ -73,10 +73,10 @@ async def process_product_images():
         products = result.scalars().all()
         
         if not products:
-            print("⚠️  Aucun produit trouvé. Exécutez d'abord 'make seed'")
+            print("ATTENTION: Aucun produit trouvé. Exécutez d'abord 'make seed'")
             return
         
-        print(f"📦 {len(products)} produits trouvés\n")
+        print(f"{len(products)} produits trouvés\n")
         
         uploaded_count = 0
         skipped_count = 0
@@ -85,7 +85,7 @@ async def process_product_images():
             for product in products:
                 # Check if product already has a MinIO URL
                 if product.image_url and "minio" in product.image_url.lower():
-                    print(f"⏭️  {product.name}: Image déjà uploadée")
+                    print(f"SKIP: {product.name}: Image déjà uploadée")
                     skipped_count += 1
                     continue
                 
@@ -93,11 +93,11 @@ async def process_product_images():
                 image_url = PRODUCT_IMAGES.get(product.id, product.image_url)
                 
                 if not image_url:
-                    print(f"⚠️  {product.name}: Pas d'URL d'image disponible")
+                    print(f"ATTENTION: {product.name}: Pas d'URL d'image disponible")
                     skipped_count += 1
                     continue
                 
-                print(f"⬇️  Téléchargement: {product.name}...")
+                print(f"Téléchargement: {product.name}...")
                 
                 # Download image
                 image_data = await download_image(image_url)
@@ -118,17 +118,17 @@ async def process_product_images():
                     product.image_url = minio_url
                     await session.commit()
                     
-                    print(f"✅ {product.name}: Image uploadée → {minio_url}")
+                    print(f"OK: {product.name}: Image uploadée → {minio_url}")
                     uploaded_count += 1
                     
                 except Exception as e:
-                    print(f"❌ {product.name}: Erreur lors de l'upload → {e}")
+                    print(f"ERREUR: {product.name}: Erreur lors de l'upload → {e}")
                     skipped_count += 1
                     await session.rollback()
         
-        print(f"\n📊 Résumé:")
-        print(f"   ✅ {uploaded_count} images uploadées")
-        print(f"   ⏭️  {skipped_count} images ignorées")
+        print(f"\nRésumé:")
+        print(f"   - {uploaded_count} images uploadées")
+        print(f"   - {skipped_count} images ignorées")
     
     await engine.dispose()
 

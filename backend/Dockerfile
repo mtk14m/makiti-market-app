@@ -13,20 +13,22 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
 # Install Poetry
 RUN pip install --no-cache-dir poetry==1.7.1
 
-# Configure Poetry
+# Configure Poetry to install directly in system Python (no virtualenv)
 ENV POETRY_NO_INTERACTION=1 \
-    POETRY_VENV_IN_PROJECT=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache \
-    PATH="/app/.venv/bin:$PATH"
+    POETRY_VIRTUALENVS_CREATE=false \
+    POETRY_CACHE_DIR=/tmp/poetry_cache
 
 # Copy dependency files
 COPY pyproject.toml poetry.lock* ./
 
 # Install dependencies
-RUN poetry install --no-dev && rm -rf $POETRY_CACHE_DIR
+RUN poetry install --only main --no-root && rm -rf $POETRY_CACHE_DIR
 
 # Copy application code
 COPY . .
+
+# Install the project itself
+RUN poetry install --only main && rm -rf $POETRY_CACHE_DIR
 
 # Expose port
 EXPOSE 8000

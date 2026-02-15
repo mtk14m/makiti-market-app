@@ -1,6 +1,6 @@
 # Guide de Démarrage Rapide - Backend
 
-## 🚀 Démarrage Complet
+## Démarrage Complet
 
 ### 1. Installer les dépendances
 
@@ -25,10 +25,10 @@ docker-compose up -d
 ```
 
 Cela démarre :
-- ✅ PostgreSQL (port 5432)
-- ✅ Redis (port 6379)
-- ✅ MinIO (port 9000 - API, port 9001 - Console)
-- ✅ API Backend (port 8000)
+- PostgreSQL (port 5432)
+- Redis (port 6379)
+- MinIO (port 9000 - API, port 9001 - Console)
+- API Backend (port 8000)
 
 ### 4. Accéder à MinIO Console
 
@@ -127,7 +127,7 @@ curl "http://localhost:8000/api/v1/products?search=mangue"
 curl http://localhost:8000/api/v1/products/categories/list
 ```
 
-## 📦 Produits Seedés
+## Produits Seedés
 
 Le script seed ajoute 15 produits répartis en 5 catégories :
 
@@ -139,7 +139,7 @@ Le script seed ajoute 15 produits répartis en 5 catégories :
 
 Tous les prix sont en FCFA avec des fourchettes de négociation définies.
 
-## 🔧 Commandes Utiles
+## Commandes Utiles
 
 ```bash
 # Voir les logs Docker
@@ -148,7 +148,7 @@ make docker-logs
 # Arrêter les services
 make docker-down
 
-# Recréer la base (⚠️ supprime les données)
+# Recréer la base (ATTENTION: supprime les données)
 make docker-down
 docker volume rm backend_postgres_data
 make docker-up
@@ -156,15 +156,15 @@ make upgrade
 make seed
 ```
 
-## 📝 Prochaines Étapes
+## Prochaines Étapes
 
-1. ✅ Module Products créé et testé
-2. ⏭️ Module Auth (authentification JWT)
-3. ⏭️ Module Orders (commandes)
-4. ⏭️ Module Shoppers (performance, notation)
-5. ⏭️ Module Wallet (portefeuilles)
+1. Module Products créé et testé
+2. Module Auth (authentification JWT)
+3. Module Orders (commandes)
+4. Module Shoppers (performance, notation)
+5. Module Wallet (portefeuilles)
 
-## 🐛 Dépannage
+## Dépannage
 
 ### MinIO ne démarre pas
 ```bash
