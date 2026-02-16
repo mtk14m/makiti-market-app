@@ -8,7 +8,13 @@ abstract class ProductsEvent extends Equatable {
 }
 
 class LoadProducts extends ProductsEvent {
-  const LoadProducts();
+  final String? category;
+  final String? search;
+
+  const LoadProducts({this.category, this.search});
+
+  @override
+  List<Object?> get props => [category, search];
 }
 
 class FilterProducts extends ProductsEvent {

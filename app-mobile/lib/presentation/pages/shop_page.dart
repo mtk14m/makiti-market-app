@@ -49,18 +49,47 @@ class _ShopPageState extends State<ShopPage> {
             // Barre de recherche améliorée
             Padding(
               padding: AppSpacing.paddingHorizontalLG,
-              child: SearchBarEnhanced(
-                hintText: 'Rechercher des produits...',
-                onChanged: (value) {
-                  context.read<ProductsBloc>().add(SearchProducts(value));
+              child: BlocBuilder<ProductsBloc, ProductsState>(
+                builder: (context, state) {
+                  // Générer les suggestions dynamiques basées sur les produits disponibles
+                  List<String> getDynamicSuggestions(String query) {
+                    if (state is ProductsLoaded) {
+                      final queryLower = query.toLowerCase();
+                      // Extraire les noms de produits qui correspondent à la requête
+                      final matchingProducts = state.products
+                          .where((product) => product.name.toLowerCase().contains(queryLower))
+                          .map((product) => product.name)
+                          .toSet() // Éviter les doublons
+                          .toList();
+                      
+                      // Trier par pertinence (produits qui commencent par la requête en premier)
+                      matchingProducts.sort((a, b) {
+                        final aStartsWith = a.toLowerCase().startsWith(queryLower);
+                        final bStartsWith = b.toLowerCase().startsWith(queryLower);
+                        if (aStartsWith && !bStartsWith) return -1;
+                        if (!aStartsWith && bStartsWith) return 1;
+                        return a.compareTo(b);
+                      });
+                      
+                      return matchingProducts;
+                    }
+                    return [];
+                  }
+
+                  return SearchBarEnhanced(
+                    hintText: 'Rechercher des produits...',
+                    onChanged: (value) {
+                      if (value.isEmpty) {
+                        // Si la recherche est vide, recharger les produits avec le filtre de catégorie actuel
+                        context.read<ProductsBloc>().add(FilterProducts(category: selectedCategory));
+                      } else {
+                        // Sinon, rechercher (la recherche ignore le filtre de catégorie)
+                        context.read<ProductsBloc>().add(SearchProducts(value));
+                      }
+                    },
+                    dynamicSuggestions: getDynamicSuggestions,
+                  );
                 },
-                suggestions: const [
-                  'Tomates',
-                  'Oignons',
-                  'Pommes de terre',
-                  'Riz',
-                  'Huile',
-                ],
               ),
             ),
             
@@ -100,15 +129,32 @@ class _ShopPageState extends State<ShopPage> {
                     isSelected: selectedCategory == 'Viande',
                     onTap: () => _selectCategory('Viande'),
                   ),
+                  SizedBox(width: AppSpacing.md - AppSpacing.xs),
+                  CategoryChip(
+                    label: 'Épicerie',
+                    icon: Icons.shopping_bag,
+                    isSelected: selectedCategory == 'Épicerie',
+                    onTap: () => _selectCategory('Épicerie'),
+                  ),
+                  SizedBox(width: AppSpacing.md - AppSpacing.xs),
+                  CategoryChip(
+                    label: 'Produits laitiers',
+                    icon: Icons.agriculture,
+                    isSelected: selectedCategory == 'Produits laitiers',
+                    onTap: () => _selectCategory('Produits laitiers'),
+                  ),
+                  SizedBox(width: AppSpacing.md - AppSpacing.xs),
+                  CategoryChip(
+                    label: 'Boissons',
+                    icon: Icons.local_drink,
+                    isSelected: selectedCategory == 'Boissons',
+                    onTap: () => _selectCategory('Boissons'),
+                  ),
                 ],
               ),
             ),
 
-            Divider(
-              height: 1,
-              color: AppColors.textSecondary.withOpacity(0.3),
-              thickness: 0.5,
-            ),
+            AppSpacing.gapMD,
 
             // Section Header
             SectionHeader(
@@ -127,8 +173,43 @@ class _ShopPageState extends State<ShopPage> {
                   if (state is ProductsLoading) {
                     return const Center(
                       child: Padding(
-                        padding: EdgeInsets.all(32.0),
+                        padding: AppSpacing.paddingXL,
                         child: CircularProgressIndicator(),
+                      ),
+                    );
+                  }
+                  if (state is ProductsError) {
+                    return Center(
+                      child: Padding(
+                        padding: AppSpacing.paddingXL,
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.error_outline,
+                              size: 48,
+                              color: AppColors.textSecondary,
+                            ),
+                            SizedBox(height: AppSpacing.md),
+                            Text(
+                              'Erreur',
+                              style: AppTextStyles.h2,
+                            ),
+                            SizedBox(height: AppSpacing.sm),
+                            Text(
+                              state.message,
+                              style: AppTextStyles.bodySecondary,
+                              textAlign: TextAlign.center,
+                            ),
+                            SizedBox(height: AppSpacing.lg),
+                            ElevatedButton(
+                              onPressed: () {
+                                context.read<ProductsBloc>().add(const LoadProducts());
+                              },
+                              child: const Text('Réessayer'),
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   }
@@ -137,7 +218,7 @@ class _ShopPageState extends State<ShopPage> {
                       return EmptyState(
                         icon: Icons.search_off,
                         title: 'Aucun produit trouvé',
-                        subtitle: 'Essayez une autre recherche',
+                        subtitle: 'Essayez une autre recherche ou catégorie',
                       );
                     }
                     return ListView.builder(

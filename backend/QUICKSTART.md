@@ -30,12 +30,22 @@ Cela démarre :
 - MinIO (port 9000 - API, port 9001 - Console)
 - API Backend (port 8000)
 
-### 4. Accéder à MinIO Console
+### 4. Accéder à MinIO Console et configurer l'accès public
 
 Ouvrir dans le navigateur : http://localhost:9001
 
 - **Username** : `minioadmin` (par défaut)
 - **Password** : `minioadmin123` (par défaut)
+
+**Important** : Configurer le bucket pour l'accès public en lecture :
+
+```bash
+make setup-minio
+# ou
+poetry run python scripts/setup_minio_public.py
+```
+
+Cela configure le bucket `products` pour permettre la lecture publique des images, nécessaire pour l'application mobile.
 
 ### 5. Créer la migration et initialiser la base de données
 
@@ -61,7 +71,21 @@ Cela ajoute 15 produits du marché ouest-africain avec :
 - Fourchettes de prix (P_min, P_target, P_max)
 - URLs d'images Unsplash (temporaires)
 
-### 7. Télécharger et uploader les images dans MinIO
+### 7. Configurer MinIO pour l'accès public
+
+Le bucket doit être configuré pour l'accès public en lecture afin que l'application mobile puisse charger les images :
+
+```bash
+make setup-minio
+# ou
+poetry run python scripts/setup_minio_public.py
+```
+
+Cela configure automatiquement la politique du bucket pour permettre la lecture publique.
+
+**Note** : Cette configuration est aussi faite automatiquement au démarrage de l'API, mais vous pouvez l'exécuter manuellement si nécessaire.
+
+### 8. Télécharger et uploader les images dans MinIO
 
 ```bash
 make download-images
@@ -73,9 +97,9 @@ Ce script :
 - Télécharge les images depuis Unsplash
 - Les optimise (JPEG, qualité 85%)
 - Les upload dans MinIO
-- Met à jour les URLs des produits dans la base de données
+- Met à jour les URLs des produits dans la base de données avec des URLs publiques accessibles depuis l'app mobile
 
-### 8. Démarrer le serveur API
+### 9. Démarrer le serveur API
 
 ```bash
 make run
@@ -83,7 +107,7 @@ make run
 poetry run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 9. Tester les endpoints
+### 10. Tester les endpoints
 
 #### Documentation interactive
 - **Swagger UI** : http://localhost:8000/docs

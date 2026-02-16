@@ -26,8 +26,6 @@ def get_minio_client() -> Minio:
             secret_key=settings.MINIO_SECRET_KEY,
             secure=settings.MINIO_USE_SSL,
         )
-        # Ensure bucket exists
-        _ensure_bucket_exists()
     return minio_client
 
 
@@ -72,8 +70,11 @@ async def upload_image(
             content_type=content_type,
         )
         
-        # Return public URL (adjust based on your MinIO setup)
-        url = f"http://{settings.MINIO_ENDPOINT}/{settings.MINIO_BUCKET_NAME}/{object_name}"
+        # Return public URL for MinIO (accessible from mobile app)
+        # Use MINIO_PUBLIC_ENDPOINT which should be localhost:9000 in dev
+        protocol = "https" if settings.MINIO_USE_SSL else "http"
+        public_endpoint = getattr(settings, 'MINIO_PUBLIC_ENDPOINT', settings.MINIO_ENDPOINT)
+        url = f"{protocol}://{public_endpoint}/{settings.MINIO_BUCKET_NAME}/{object_name}"
         logger.info("Image uploaded", object_name=object_name, url=url)
         return url
     except S3Error as e:

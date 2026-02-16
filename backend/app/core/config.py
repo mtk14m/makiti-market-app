@@ -73,6 +73,10 @@ class Settings(BaseSettings):
 
     # MinIO (S3-compatible storage)
     MINIO_ENDPOINT: str = Field(default="localhost:9000")
+    MINIO_PUBLIC_ENDPOINT: str = Field(
+        default="localhost:9000",
+        description="Public endpoint for mobile app (usually localhost:9000 in dev)"
+    )
     MINIO_ACCESS_KEY: str = Field(default="minioadmin")
     MINIO_SECRET_KEY: str = Field(default="minioadmin123")
     MINIO_BUCKET_NAME: str = Field(default="products")

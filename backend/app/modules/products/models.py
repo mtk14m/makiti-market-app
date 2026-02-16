@@ -20,7 +20,7 @@ class Product(Base):
     original_price = Column(Float, nullable=True)  # Prix avant réduction
     image_url = Column(String, nullable=True)
     category = Column(String, nullable=False, index=True)
-    unit = Column(String, nullable=True)  # kg, L, pièce, etc.
+    unit = Column(String, nullable=False, default="pièce")  # kg, L, pièce, etc.
     is_available = Column(Boolean, default=True, index=True)
     
     # Prix de référence pour négociation (côté shopper)

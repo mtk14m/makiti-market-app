@@ -5,20 +5,33 @@ import 'product.dart';
 class CartItem extends Equatable {
   final String id;
   final Product product;
-  final int quantity;
+  final double quantity; // Quantité en kg, litre, ou pièce selon l'unité du produit
 
   const CartItem({
     required this.id,
     required this.product,
-    this.quantity = 1,
+    this.quantity = 1.0,
   });
 
-  double get totalPrice => product.price * quantity;
+  /// Calcule le prix total selon la quantité et l'unité
+  /// Le prix du produit est toujours au kg/litre/pièce selon l'unité
+  double get totalPrice {
+    return product.price * quantity;
+  }
+
+  /// Retourne la quantité formatée avec l'unité
+  String get formattedQuantity {
+    final unit = product.unit ?? 'pièce';
+    if (quantity == quantity.toInt()) {
+      return '${quantity.toInt()} $unit';
+    }
+    return '${quantity.toStringAsFixed(quantity.truncateToDouble() == quantity ? 0 : 2)} $unit';
+  }
 
   CartItem copyWith({
     String? id,
     Product? product,
-    int? quantity,
+    double? quantity,
   }) {
     return CartItem(
       id: id ?? this.id,

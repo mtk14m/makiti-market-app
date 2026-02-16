@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/utils/image_url_helper.dart';
 import '../../domain/entities/product.dart';
 import 'package:intl/intl.dart';
 
@@ -59,19 +61,65 @@ class ProductCard extends StatelessWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // Image placeholder - plus petite et rectangulaire
-            Container(
-              width: 70,
-              height: 70,
-              decoration: BoxDecoration(
-                color: AppColors.categoryBg,
-                borderRadius: BorderRadius.circular(AppSpacing.sm),
-              ),
-              child: Icon(
-                Icons.shopping_basket,
-                color: AppColors.primary.withOpacity(0.6),
-                size: 32,
-              ),
+            // Image du produit
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppSpacing.sm),
+              child: product.imageUrl.isNotEmpty
+                  ? CachedNetworkImage(
+                      // Ajoute un paramètre de version pour forcer le rechargement si l'image change
+                      imageUrl: ImageUrlHelper.addCacheBuster(product.imageUrl, product.id),
+                      width: 70,
+                      height: 70,
+                      fit: BoxFit.cover,
+                      // Cache key unique basé sur l'ID du produit
+                      cacheKey: 'product_${product.id}',
+                      // Max cache duration réduit pour permettre les mises à jour
+                      maxHeightDiskCache: 200,
+                      maxWidthDiskCache: 200,
+                      placeholder: (context, url) => Container(
+                        width: 70,
+                        height: 70,
+                        color: AppColors.categoryBg,
+                        child: Center(
+                          child: SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                AppColors.primary,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: AppColors.categoryBg,
+                          borderRadius: BorderRadius.circular(AppSpacing.sm),
+                        ),
+                        child: Icon(
+                          Icons.image_not_supported,
+                          color: AppColors.lightGrey,
+                          size: 32,
+                        ),
+                      ),
+                    )
+                  : Container(
+                      width: 70,
+                      height: 70,
+                      decoration: BoxDecoration(
+                        color: AppColors.categoryBg,
+                        borderRadius: BorderRadius.circular(AppSpacing.sm),
+                      ),
+                      child: Icon(
+                        Icons.shopping_basket,
+                        color: AppColors.primary.withOpacity(0.6),
+                        size: 32,
+                      ),
+                    ),
             ),
             SizedBox(width: AppSpacing.sm),
             // Contenu principal

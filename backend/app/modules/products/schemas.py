@@ -17,7 +17,7 @@ class ProductBase(BaseSchema):
     original_price: Optional[float] = Field(None, gt=0)
     image_url: Optional[str] = None
     category: str = Field(..., min_length=1, max_length=100)
-    unit: Optional[str] = Field(None, max_length=20)  # kg, L, pièce, etc.
+    unit: str = Field(..., min_length=1, max_length=20, description="Unité de vente: kg, L, ou pièce")  # kg, L, pièce
     is_available: bool = True
 
 
@@ -38,7 +38,7 @@ class ProductUpdate(BaseSchema):
     original_price: Optional[float] = Field(None, gt=0)
     image_url: Optional[str] = None
     category: Optional[str] = Field(None, min_length=1, max_length=100)
-    unit: Optional[str] = Field(None, max_length=20)
+    unit: Optional[str] = Field(None, min_length=1, max_length=20, description="Unité de vente: kg, L, ou pièce")
     is_available: Optional[bool] = None
     price_min: Optional[float] = Field(None, gt=0)
     price_target: Optional[float] = Field(None, gt=0)

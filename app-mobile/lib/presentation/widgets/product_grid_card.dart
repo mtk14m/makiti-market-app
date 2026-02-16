@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
+import '../../core/utils/image_url_helper.dart';
 import '../../domain/entities/product.dart';
 import 'package:intl/intl.dart';
 
@@ -36,23 +38,66 @@ class ProductGridCard extends StatelessWidget {
           children: [
             // Image container
             Expanded(
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: AppColors.backgroundLight.withOpacity(0.5),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Stack(
-                  clipBehavior: Clip.none,
-                  children: [
-                    // Image/Icon au centre
-                    Center(
-                      child: Icon(
-                        Icons.image,
-                        size: 60,
-                        color: AppColors.lightGrey,
-                      ),
-                    ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: Container(
+                  width: double.infinity,
+                  decoration: BoxDecoration(
+                    color: AppColors.backgroundLight.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      // Image du produit
+                      product.imageUrl.isNotEmpty
+                          ? CachedNetworkImage(
+                              // Ajoute un paramètre de version pour forcer le rechargement si l'image change
+                              imageUrl: ImageUrlHelper.addCacheBuster(product.imageUrl, product.id),
+                              width: double.infinity,
+                              height: double.infinity,
+                              fit: BoxFit.cover,
+                              // Cache key unique basé sur l'ID du produit
+                              cacheKey: 'product_${product.id}',
+                              // Max cache duration réduit pour permettre les mises à jour
+                              maxHeightDiskCache: 400,
+                              maxWidthDiskCache: 400,
+                              placeholder: (context, url) => Container(
+                                color: AppColors.categoryBg,
+                                child: Center(
+                                  child: SizedBox(
+                                    width: 24,
+                                    height: 24,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        AppColors.primary,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              errorWidget: (context, url, error) => Container(
+                                color: AppColors.categoryBg,
+                                child: Center(
+                                  child: Icon(
+                                    Icons.image_not_supported,
+                                    size: 40,
+                                    color: AppColors.lightGrey,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Container(
+                              color: AppColors.categoryBg,
+                              child: Center(
+                                child: Icon(
+                                  Icons.image,
+                                  size: 60,
+                                  color: AppColors.lightGrey,
+                                ),
+                              ),
+                            ),
                     // Bouton Add en bas à droite - doit être au-dessus (z-index plus élevé)
                     Positioned(
                       bottom: -4,

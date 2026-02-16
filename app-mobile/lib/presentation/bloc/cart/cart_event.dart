@@ -27,7 +27,7 @@ class RemoveFromCart extends CartEvent {
 
 class UpdateQuantity extends CartEvent {
   final String cartItemId;
-  final int quantity;
+  final double quantity;
 
   const UpdateQuantity({
     required this.cartItemId,

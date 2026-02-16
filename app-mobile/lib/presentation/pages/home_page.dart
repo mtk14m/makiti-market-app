@@ -5,6 +5,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/theme/app_spacing.dart';
 import '../bloc/products/products_bloc.dart';
 import '../bloc/cart/cart_bloc.dart';
+import '../bloc/navigation/navigation_bloc.dart';
 import '../widgets/product_card.dart';
 import '../widgets/category_chip.dart';
 import '../widgets/promotion_card.dart';
@@ -44,15 +45,47 @@ class _HomePageState extends State<HomePage> {
             // Barre de recherche améliorée
             Padding(
               padding: AppSpacing.paddingHorizontalLG,
-              child: SearchBarEnhanced(
-                hintText: 'Rechercher des produits...',
-                suggestions: const [
-                  'Tomates',
-                  'Oignons',
-                  'Pommes de terre',
-                  'Riz',
-                  'Huile',
-                ],
+              child: BlocBuilder<ProductsBloc, ProductsState>(
+                builder: (context, state) {
+                  // Générer les suggestions dynamiques basées sur les produits disponibles
+                  List<String> getDynamicSuggestions(String query) {
+                    if (state is ProductsLoaded) {
+                      final queryLower = query.toLowerCase();
+                      // Extraire les noms de produits qui correspondent à la requête
+                      final matchingProducts = state.products
+                          .where((product) => product.name.toLowerCase().contains(queryLower))
+                          .map((product) => product.name)
+                          .toSet() // Éviter les doublons
+                          .toList();
+                      
+                      // Trier par pertinence (produits qui commencent par la requête en premier)
+                      matchingProducts.sort((a, b) {
+                        final aStartsWith = a.toLowerCase().startsWith(queryLower);
+                        final bStartsWith = b.toLowerCase().startsWith(queryLower);
+                        if (aStartsWith && !bStartsWith) return -1;
+                        if (!aStartsWith && bStartsWith) return 1;
+                        return a.compareTo(b);
+                      });
+                      
+                      return matchingProducts;
+                    }
+                    return [];
+                  }
+
+                  return SearchBarEnhanced(
+                    hintText: 'Rechercher des produits...',
+                    onChanged: (value) {
+                      if (value.isEmpty) {
+                        // Si la recherche est vide, recharger tous les produits
+                        context.read<ProductsBloc>().add(const LoadProducts());
+                      } else {
+                        // Sinon, rechercher
+                        context.read<ProductsBloc>().add(SearchProducts(value));
+                      }
+                    },
+                    dynamicSuggestions: getDynamicSuggestions,
+                  );
+                },
               ),
             ),
             
@@ -73,43 +106,52 @@ class _HomePageState extends State<HomePage> {
                         padding: AppSpacing.paddingHorizontalLG,
                         children: [
                           CategoryChip(
+                            label: 'Tout',
+                            icon: Icons.apps,
+                            isSelected: selectedCategory == null,
+                            onTap: () => _selectCategory(null),
+                          ),
+                          SizedBox(width: AppSpacing.md - AppSpacing.xs),
+                          CategoryChip(
                             label: 'Légumes',
                             icon: Icons.eco,
                             isSelected: selectedCategory == 'Légumes',
                             onTap: () => _selectCategory('Légumes'),
-                            backgroundColor: AppColors.primary.withOpacity(0.2),
                           ),
-                          SizedBox(width: AppSpacing.lg),
+                          SizedBox(width: AppSpacing.md - AppSpacing.xs),
                           CategoryChip(
                             label: 'Fruits',
                             icon: Icons.apple,
                             isSelected: selectedCategory == 'Fruits',
                             onTap: () => _selectCategory('Fruits'),
-                            backgroundColor: AppColors.categoryBg,
                           ),
-                          SizedBox(width: AppSpacing.lg),
+                          SizedBox(width: AppSpacing.md - AppSpacing.xs),
                           CategoryChip(
                             label: 'Viande',
                             icon: Icons.set_meal,
                             isSelected: selectedCategory == 'Viande',
                             onTap: () => _selectCategory('Viande'),
-                            backgroundColor: AppColors.categoryBg,
                           ),
-                          SizedBox(width: AppSpacing.lg),
-                          CategoryChip(
-                            label: 'Poisson',
-                            icon: Icons.set_meal,
-                            isSelected: selectedCategory == 'Poisson',
-                            onTap: () => _selectCategory('Poisson'),
-                            backgroundColor: AppColors.categoryBg,
-                          ),
-                          SizedBox(width: AppSpacing.lg),
+                          SizedBox(width: AppSpacing.md - AppSpacing.xs),
                           CategoryChip(
                             label: 'Épicerie',
-                            icon: Icons.shopping_basket,
+                            icon: Icons.shopping_bag,
                             isSelected: selectedCategory == 'Épicerie',
                             onTap: () => _selectCategory('Épicerie'),
-                            backgroundColor: AppColors.categoryBg,
+                          ),
+                          SizedBox(width: AppSpacing.md - AppSpacing.xs),
+                          CategoryChip(
+                            label: 'Produits laitiers',
+                            icon: Icons.agriculture,
+                            isSelected: selectedCategory == 'Produits laitiers',
+                            onTap: () => _selectCategory('Produits laitiers'),
+                          ),
+                          SizedBox(width: AppSpacing.md - AppSpacing.xs),
+                          CategoryChip(
+                            label: 'Boissons',
+                            icon: Icons.local_drink,
+                            isSelected: selectedCategory == 'Boissons',
+                            onTap: () => _selectCategory('Boissons'),
                           ),
                         ],
                       ),
@@ -123,7 +165,9 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         SectionHeader(
                           title: 'À ne pas manquer !',
-                          onActionTap: () {},
+                          onActionTap: () {
+                            context.read<NavigationBloc>().add(NavigateToShop());
+                          },
                         ),
                         AppSpacing.gapMD,
                         SizedBox(
@@ -156,7 +200,9 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         SectionHeader(
                           title: 'Pour vous',
-                          onActionTap: () {},
+                          onActionTap: () {
+                            context.read<NavigationBloc>().add(NavigateToShop());
+                          },
                         ),
                         AppSpacing.gapMD,
                         // Filtres horizontaux

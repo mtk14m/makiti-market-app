@@ -23,8 +23,8 @@ class CartPage extends StatelessWidget {
             // Header
             BlocBuilder<CartBloc, CartState>(
               builder: (context, state) {
-                if (state is CartEmpty) {
-                  return _buildEmptyCart(context);
+                if (state is CartEmpty || state.items.isEmpty) {
+                  return Expanded(child: _buildEmptyCart(context));
                 }
 
                 if (state is CartLoaded) {
@@ -40,12 +40,8 @@ class CartPage extends StatelessWidget {
                   );
                 }
 
-                return const Center(
-                  child: Padding(
-                    padding: AppSpacing.paddingXL,
-                    child: CircularProgressIndicator(),
-                  ),
-                );
+                // Fallback pour CartInitial (ne devrait pas arriver avec le nouveau code)
+                return Expanded(child: _buildEmptyCart(context));
               },
             ),
           ],
@@ -298,37 +294,53 @@ class CartPage extends StatelessWidget {
               
               AppSpacing.gapMD,
               
-              // Total
+              // Détail des frais et total
               Container(
-                padding: const EdgeInsets.only(top: 16),
+                padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(
-                      color: Colors.grey[200]!,
-                      width: 1,
-                    ),
+                  color: AppColors.surfaceLight,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: AppColors.greyBorder,
+                    width: 1,
                   ),
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                child: Column(
                   children: [
-                    Text(
-                      'Total estimé :',
-                      style: AppTextStyles.body.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    // Sous-total
+                    _buildFeeRow(
+                      'Sous-total',
+                      formatter.format(state.subtotal),
+                      isBold: false,
                     ),
-                    TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        'Détails',
-                        style: AppTextStyles.body.copyWith(
-                          fontSize: 14,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.primaryDark,
-                        ),
-                      ),
+                    SizedBox(height: AppSpacing.sm),
+                    // Frais de service
+                    _buildFeeRow(
+                      'Frais de service (10%)',
+                      formatter.format(state.serviceFee),
+                      isBold: false,
+                    ),
+                    SizedBox(height: AppSpacing.sm),
+                    // Frais de transport
+                    _buildFeeRow(
+                      'Frais de transport',
+                      formatter.format(state.deliveryFee),
+                      isBold: false,
+                    ),
+                    SizedBox(height: AppSpacing.md),
+                    // Séparateur
+                    Divider(
+                      height: 1,
+                      color: AppColors.greyBorder,
+                      thickness: 1,
+                    ),
+                    SizedBox(height: AppSpacing.md),
+                    // Total final
+                    _buildFeeRow(
+                      'Total',
+                      formatter.format(state.totalPrice),
+                      isBold: true,
+                      isTotal: true,
                     ),
                   ],
                 ),
@@ -369,6 +381,42 @@ class CartPage extends StatelessWidget {
             foregroundColor: AppColors.textOnPrimary,
             icon: Icons.shopping_cart,
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFeeRow(String label, String amount, {bool isBold = false, bool isTotal = false}) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: isTotal
+              ? AppTextStyles.body.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textPrimary,
+                )
+              : AppTextStyles.body.copyWith(
+                  fontSize: 14,
+                  fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
+                  color: isTotal ? AppColors.textPrimary : AppColors.textSecondary,
+                ),
+        ),
+        Text(
+          '$amount FCFA',
+          style: isTotal
+              ? AppTextStyles.price.copyWith(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.primaryDark,
+                )
+              : AppTextStyles.body.copyWith(
+                  fontSize: 14,
+                  fontWeight: isBold ? FontWeight.w600 : FontWeight.normal,
+                  color: isTotal ? AppColors.primaryDark : AppColors.textPrimary,
+                ),
         ),
       ],
     );

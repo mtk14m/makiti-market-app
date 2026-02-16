@@ -64,7 +64,16 @@ worker: ## Run RQ worker
 seed: ## Seed products database
 	poetry run python scripts/seed_products.py
 
-download-images: ## Download and upload product images to MinIO
-	poetry run python scripts/download_and_upload_images.py
+upload-images: ## Upload product images from shared/assets/images to MinIO
+	poetry run python scripts/upload_local_images.py
+
+setup-minio: ## Configure MinIO bucket for public read access
+	poetry run python scripts/setup_minio_public.py
+
+check-minio: ## Check objects in MinIO bucket
+	poetry run python scripts/check_minio_objects.py
+
+cleanup-minio: ## Clean up duplicate objects in MinIO
+	poetry run python scripts/cleanup_minio_duplicates.py
 
 

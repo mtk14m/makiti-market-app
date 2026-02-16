@@ -7,7 +7,7 @@ part 'cart_event.dart';
 part 'cart_state.dart';
 
 class CartBloc extends Bloc<CartEvent, CartState> {
-  CartBloc() : super(CartInitial()) {
+  CartBloc() : super(const CartEmpty()) {
     on<AddToCart>(_onAddToCart);
     on<RemoveFromCart>(_onRemoveFromCart);
     on<UpdateQuantity>(_onUpdateQuantity);
@@ -25,17 +25,19 @@ class CartBloc extends Bloc<CartEvent, CartState> {
 
     if (existingItemIndex >= 0) {
       // Augmenter la quantité si le produit existe déjà
+      // Par défaut, on ajoute 1 unité (1 kg, 1 litre, ou 1 pièce)
+      final currentQuantity = currentItems[existingItemIndex].quantity;
       updatedItems = List.from(currentItems);
       updatedItems[existingItemIndex] = updatedItems[existingItemIndex]
-          .copyWith(quantity: updatedItems[existingItemIndex].quantity + 1);
+          .copyWith(quantity: currentQuantity + 1.0);
     } else {
-      // Ajouter un nouvel article
+      // Ajouter un nouvel article avec quantité par défaut de 1
       updatedItems = [
         ...currentItems,
         CartItem(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
           product: event.product,
-          quantity: 1,
+          quantity: 1.0,
         ),
       ];
     }
