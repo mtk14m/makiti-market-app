@@ -18,56 +18,58 @@ class PromotionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 280,
-      height: 160,
+      width: 292,
+      height: 132,
       padding: AppSpacing.paddingMD,
       decoration: BoxDecoration(
-        color: discount != null ? AppColors.primary : AppColors.darkGrey,
-        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          colors: discount != null
+              ? [
+                  AppColors.secondary.withValues(alpha: 0.95),
+                  AppColors.secondary.withValues(alpha: 0.72),
+                ]
+              : [
+                  AppColors.primaryDark,
+                  AppColors.darkGrey,
+                ],
+          begin: Alignment.centerLeft,
+          end: Alignment.centerRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
       ),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
-          // Badge pourcentage si discount - doit être au-dessus (z-index plus élevé)
           if (discount != null)
             Positioned(
-              top: -8,
-              right: -8,
+              top: 0,
+              left: 0,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                 decoration: BoxDecoration(
                   color: AppColors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: AppColors.primary, width: 1),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.1),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Text(
                   '$discount%',
-                  style: AppTextStyles.body.copyWith(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.bold,
+                  style: AppTextStyles.bodySecondary.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w700,
                     fontSize: 12,
                   ),
                 ),
               ),
             ),
-          // Contenu principal
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              if (discount != null) SizedBox(height: AppSpacing.lg),
               Text(
                 title,
                 style: AppTextStyles.h2.copyWith(
                   color: discount != null ? AppColors.textOnPrimary : AppColors.textOnDark,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
                 ),
               ),
               SizedBox(height: AppSpacing.xs),
@@ -75,16 +77,34 @@ class PromotionCard extends StatelessWidget {
                 subtitle,
                 style: AppTextStyles.bodySecondary.copyWith(
                   color: discount != null 
-                      ? AppColors.textOnPrimary.withOpacity(0.8)
+                      ? AppColors.textPrimary.withOpacity(0.82)
                       : AppColors.textOnDark.withOpacity(0.9),
-                  fontSize: 10,
+                  fontSize: 12,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              SizedBox(height: AppSpacing.sm),
-              Icon(
-                Icons.arrow_forward,
-                color: discount != null ? AppColors.textOnPrimary : AppColors.textOnDark,
-                size: 20,
+              const Spacer(),
+              Row(
+                children: [
+                  Text(
+                    'Découvrir',
+                    style: AppTextStyles.body.copyWith(
+                      color: discount != null
+                          ? AppColors.textPrimary
+                          : AppColors.textOnDark,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(
+                    Icons.arrow_forward_rounded,
+                    color: discount != null
+                        ? AppColors.textPrimary
+                        : AppColors.textOnDark,
+                    size: 18,
+                  ),
+                ],
               ),
             ],
           ),
@@ -93,4 +113,3 @@ class PromotionCard extends StatelessWidget {
     );
   }
 }
-

@@ -11,10 +11,10 @@ class NavigationInitial extends NavigationState {}
 
 class NavigationHome extends NavigationState {}
 
-class NavigationShop extends NavigationState {}
+class NavigationExplore extends NavigationState {}
 
-class NavigationCart extends NavigationState {}
+class NavigationSell extends NavigationState {}
+
+class NavigationMessages extends NavigationState {}
 
 class NavigationAccount extends NavigationState {}
-
-

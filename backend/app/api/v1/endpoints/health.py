@@ -12,9 +12,7 @@ async def health_check() -> JSONResponse:
     return JSONResponse(
         content={
             "status": "healthy",
-            "service": "makiti-market-api",
+            "service": "makiti-platform-api",
             "version": "0.1.0",
         }
     )
-
-

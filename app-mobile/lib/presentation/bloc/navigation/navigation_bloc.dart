@@ -7,8 +7,9 @@ part 'navigation_state.dart';
 class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
   NavigationBloc() : super(NavigationInitial()) {
     on<NavigateToHome>(_onNavigateToHome);
-    on<NavigateToShop>(_onNavigateToShop);
-    on<NavigateToCart>(_onNavigateToCart);
+    on<NavigateToExplore>(_onNavigateToExplore);
+    on<NavigateToSell>(_onNavigateToSell);
+    on<NavigateToMessages>(_onNavigateToMessages);
     on<NavigateToAccount>(_onNavigateToAccount);
   }
 
@@ -16,12 +17,25 @@ class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
     emit(NavigationHome());
   }
 
-  void _onNavigateToShop(NavigateToShop event, Emitter<NavigationState> emit) {
-    emit(NavigationShop());
+  void _onNavigateToExplore(
+    NavigateToExplore event,
+    Emitter<NavigationState> emit,
+  ) {
+    emit(NavigationExplore());
   }
 
-  void _onNavigateToCart(NavigateToCart event, Emitter<NavigationState> emit) {
-    emit(NavigationCart());
+  void _onNavigateToSell(
+    NavigateToSell event,
+    Emitter<NavigationState> emit,
+  ) {
+    emit(NavigationSell());
+  }
+
+  void _onNavigateToMessages(
+    NavigateToMessages event,
+    Emitter<NavigationState> emit,
+  ) {
+    emit(NavigationMessages());
   }
 
   void _onNavigateToAccount(
@@ -31,5 +45,3 @@ class NavigationBloc extends Bloc<NavigationEvent, NavigationState> {
     emit(NavigationAccount());
   }
 }
-
-

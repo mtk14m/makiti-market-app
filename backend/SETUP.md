@@ -22,14 +22,12 @@ pyenv local 3.12.0
 python --version  # Devrait afficher Python 3.12.0
 ```
 
-### Option 2 : Utiliser Poetry avec une version spécifique
+### Option 2 : Utiliser uv avec une version spécifique
 
 ```bash
 # Si vous avez Python 3.12 installé
-poetry env use python3.12
-
-# Puis installer les dépendances
-poetry install
+uv python pin 3.12
+uv sync --group dev --group test
 ```
 
 ### Option 3 : Utiliser un environnement virtuel manuel
@@ -43,11 +41,11 @@ source .venv/bin/activate  # Sur macOS/Linux
 # ou
 .venv\Scripts\activate  # Sur Windows
 
-# Installer Poetry dans cet environnement
-pip install poetry
+# Installer uv dans cet environnement
+pip install uv
 
 # Installer les dépendances
-poetry install
+uv sync --group dev --group test
 ```
 
 ## Vérification
@@ -56,7 +54,7 @@ Après avoir configuré Python 3.11 ou 3.12, vous pouvez vérifier :
 
 ```bash
 python --version  # Doit afficher 3.11.x ou 3.12.x
-poetry env info   # Affiche l'environnement Poetry actuel
+uv python find    # Affiche les interpréteurs Python détectés
 ```
 
 ## Installation des dépendances
@@ -64,9 +62,14 @@ poetry env info   # Affiche l'environnement Poetry actuel
 Une fois la bonne version de Python configurée :
 
 ```bash
-poetry install
+uv sync --group dev --group test
 ```
 
 Cela devrait maintenant fonctionner sans erreur avec `asyncpg`.
+
+
+
+
+
 
 

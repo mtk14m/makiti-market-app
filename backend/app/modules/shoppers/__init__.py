@@ -1,3 +1,0 @@
-"""Shoppers module."""
-
-

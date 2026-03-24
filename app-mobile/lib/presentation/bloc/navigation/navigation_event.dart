@@ -9,10 +9,10 @@ abstract class NavigationEvent extends Equatable {
 
 class NavigateToHome extends NavigationEvent {}
 
-class NavigateToShop extends NavigationEvent {}
+class NavigateToExplore extends NavigationEvent {}
 
-class NavigateToCart extends NavigationEvent {}
+class NavigateToSell extends NavigationEvent {}
+
+class NavigateToMessages extends NavigationEvent {}
 
 class NavigateToAccount extends NavigationEvent {}
-
-

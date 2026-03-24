@@ -2,7 +2,7 @@
 
 from typing import List, Any
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     )
 
     # Project
-    PROJECT_NAME: str = "Makiti Market API"
+    PROJECT_NAME: str = "Makiti Platform API"
     ENVIRONMENT: str = Field(default="development")
     DEBUG: bool = Field(default=False)
 
@@ -79,10 +79,28 @@ class Settings(BaseSettings):
     )
     MINIO_ACCESS_KEY: str = Field(default="minioadmin")
     MINIO_SECRET_KEY: str = Field(default="minioadmin123")
-    MINIO_BUCKET_NAME: str = Field(default="products")
+    MINIO_BUCKET_NAME: str = Field(default="makiti-assets")
     MINIO_USE_SSL: bool = Field(default=False)
+
+    # SMS/OTP Configuration (pour intégration future avec service SMS)
+    SMS_PROVIDER: str = Field(default="mock", description="mock, twilio, etc.")
+    SMS_API_KEY: str | None = Field(default=None)
+    SMS_API_SECRET: str | None = Field(default=None)
+    SMS_FROM_NUMBER: str | None = Field(default=None)
+
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def parse_debug_value(cls, value: Any) -> bool:
+        """Allow relaxed DEBUG values from existing env files."""
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"1", "true", "yes", "on", "debug"}:
+                return True
+            if normalized in {"0", "false", "no", "off", "release", "prod", "production"}:
+                return False
+        return bool(value)
 
 
 settings = Settings()
-
-

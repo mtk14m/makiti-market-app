@@ -39,7 +39,7 @@ def check_objects():
         
         if count == 0:
             print("  (no objects found)")
-            print("\nATTENTION: No images uploaded. Run 'make download-images' first.")
+            print("\nINFO: No assets uploaded yet.")
         else:
             print(f"\nTotal: {count} objects")
         
@@ -49,4 +49,9 @@ def check_objects():
 
 if __name__ == "__main__":
     check_objects()
+
+
+
+
+
 

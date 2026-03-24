@@ -10,8 +10,13 @@ until pg_isready -h localhost -p ${POSTGRES_PORT:-5432} -U ${POSTGRES_USER:-maki
 done
 
 echo "PostgreSQL is up - executing migrations"
-poetry run alembic upgrade head
+uv run alembic upgrade head
 
 echo "Database initialized successfully!"
+
+
+
+
+
 
 

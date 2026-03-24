@@ -33,7 +33,7 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version="0.1.0",
-    description="Backend API for Makiti Market",
+    description="Backend API for Makiti C2C marketplace and box logistics platform",
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
     docs_url="/docs",
     redoc_url="/redoc",
@@ -58,7 +58,7 @@ async def root():
     """Root endpoint."""
     return JSONResponse(
         content={
-            "message": "Makiti Market API",
+            "message": "Makiti Platform API",
             "version": "0.1.0",
             "docs": "/docs",
         }
@@ -71,8 +71,7 @@ async def health_check():
     return JSONResponse(
         content={
             "status": "healthy",
-            "service": "makiti-market-api",
+            "service": "makiti-platform-api",
         }
     )
-
 

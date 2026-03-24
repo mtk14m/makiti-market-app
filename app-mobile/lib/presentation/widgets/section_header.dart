@@ -49,16 +49,32 @@ class SectionHeader extends StatelessWidget {
               color: Colors.transparent,
               child: InkWell(
                 onTap: onActionTap,
-                borderRadius: BorderRadius.circular(8),
-                child: Padding(
-                  padding: AppSpacing.paddingSM,
+                borderRadius: BorderRadius.circular(999),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: AppColors.surfaceLight,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: AppColors.cardBorder),
+                  ),
                   child: action ??
-                      Text(
-                        'Voir tout',
-                        style: AppTextStyles.body.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Voir tout',
+                            style: AppTextStyles.bodySecondary.copyWith(
+                              color: AppColors.textSecondary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(
+                            Icons.arrow_forward_ios_rounded,
+                            size: 12,
+                            color: AppColors.textSecondary,
+                          ),
+                        ],
                       ),
                 ),
               ),
@@ -68,5 +84,4 @@ class SectionHeader extends StatelessWidget {
     );
   }
 }
-
 

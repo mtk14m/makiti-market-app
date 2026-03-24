@@ -1,209 +1,70 @@
-# Guide de Démarrage Rapide - Backend
+# Guide de Démarrage Rapide
 
-## Démarrage Complet
-
-### 1. Installer les dépendances
+## 1. Installer les dépendances
 
 ```bash
 cd backend
-poetry install
+uv sync --group dev --group test
 ```
 
-### 2. Configurer l'environnement
+## 2. Configurer l'environnement
 
 ```bash
 cp env.example .env
-# Éditer .env si nécessaire (les valeurs par défaut fonctionnent pour le développement)
 ```
 
-### 3. Démarrer tous les services Docker
+## 3. Lancer les services
 
 ```bash
 make docker-up
-# ou
-docker-compose up -d
 ```
 
-Cela démarre :
-- PostgreSQL (port 5432)
-- Redis (port 6379)
-- MinIO (port 9000 - API, port 9001 - Console)
-- API Backend (port 8000)
+Services attendus :
+- PostgreSQL
+- Redis
+- MinIO
+- API backend
 
-### 4. Accéder à MinIO Console et configurer l'accès public
+Le `Makefile` backend utilise le fichier Compose racine du repo.
 
-Ouvrir dans le navigateur : http://localhost:9001
-
-- **Username** : `minioadmin` (par défaut)
-- **Password** : `minioadmin123` (par défaut)
-
-**Important** : Configurer le bucket pour l'accès public en lecture :
+## 4. Initialiser la base
 
 ```bash
-make setup-minio
-# ou
-poetry run python scripts/setup_minio_public.py
-```
-
-Cela configure le bucket `products` pour permettre la lecture publique des images, nécessaire pour l'application mobile.
-
-### 5. Créer la migration et initialiser la base de données
-
-```bash
-# Créer la migration pour la table products
-make migrate msg="create_products_table"
-
-# Appliquer la migration
 make upgrade
 ```
 
-### 6. Seed les produits
-
-```bash
-make seed
-# ou
-poetry run python scripts/seed_products.py
-```
-
-Cela ajoute 15 produits du marché ouest-africain avec :
-- Prix en FCFA
-- Catégories : Légumes, Fruits, Viande, Poisson, Épicerie
-- Fourchettes de prix (P_min, P_target, P_max)
-- URLs d'images Unsplash (temporaires)
-
-### 7. Configurer MinIO pour l'accès public
-
-Le bucket doit être configuré pour l'accès public en lecture afin que l'application mobile puisse charger les images :
-
-```bash
-make setup-minio
-# ou
-poetry run python scripts/setup_minio_public.py
-```
-
-Cela configure automatiquement la politique du bucket pour permettre la lecture publique.
-
-**Note** : Cette configuration est aussi faite automatiquement au démarrage de l'API, mais vous pouvez l'exécuter manuellement si nécessaire.
-
-### 8. Télécharger et uploader les images dans MinIO
-
-```bash
-make download-images
-# ou
-poetry run python scripts/download_and_upload_images.py
-```
-
-Ce script :
-- Télécharge les images depuis Unsplash
-- Les optimise (JPEG, qualité 85%)
-- Les upload dans MinIO
-- Met à jour les URLs des produits dans la base de données avec des URLs publiques accessibles depuis l'app mobile
-
-### 9. Démarrer le serveur API
+## 5. Lancer l'API
 
 ```bash
 make run
-# ou
-poetry run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 ```
 
-### 10. Tester les endpoints
+## 6. Vérifier
 
-#### Documentation interactive
-- **Swagger UI** : http://localhost:8000/docs
-- **ReDoc** : http://localhost:8000/redoc
+- Swagger UI: `http://localhost:8000/docs`
+- Health: `http://localhost:8000/health`
 
-#### Endpoints disponibles
+## Endpoints principaux
 
 ```bash
-# Liste des produits (avec pagination et filtres)
-GET http://localhost:8000/api/v1/products?page=1&page_size=20
-
-# Filtrer par catégorie
-GET http://localhost:8000/api/v1/products?category=Légumes
-
-# Rechercher
-GET http://localhost:8000/api/v1/products?search=tomates
-
-# Détail d'un produit
-GET http://localhost:8000/api/v1/products/prod-001
-
-# Liste des catégories
-GET http://localhost:8000/api/v1/products/categories/list
-
-# Health check
-GET http://localhost:8000/health
+GET  /api/v1/health
+POST /api/v1/auth/send-otp
+POST /api/v1/auth/verify-otp
+POST /api/v1/auth/register
+POST /api/v1/auth/login
+GET  /api/v1/commerce/listings
+POST /api/v1/commerce/listings
+POST /api/v1/commerce/orders
+GET  /api/v1/logistics/boxes
+GET  /api/v1/logistics/parcels
+GET  /api/v1/logistics/shipments
 ```
 
-#### Exemples avec curl
+## MinIO
 
 ```bash
-# Liste des produits
-curl http://localhost:8000/api/v1/products
-
-# Produits par catégorie
-curl "http://localhost:8000/api/v1/products?category=Fruits"
-
-# Recherche
-curl "http://localhost:8000/api/v1/products?search=mangue"
-
-# Catégories disponibles
-curl http://localhost:8000/api/v1/products/categories/list
+make setup-minio
+make check-minio
 ```
 
-## Produits Seedés
-
-Le script seed ajoute 15 produits répartis en 5 catégories :
-
-- **Légumes** : Tomates, Oignons, Pommes de terre, Gombo, Aubergines, Piments, Ail, Gingembre
-- **Fruits** : Mangues, Bananes plantain, Ananas
-- **Viande** : Poulet frais
-- **Poisson** : Poisson frais
-- **Épicerie** : Riz local, Huile de palme
-
-Tous les prix sont en FCFA avec des fourchettes de négociation définies.
-
-## Commandes Utiles
-
-```bash
-# Voir les logs Docker
-make docker-logs
-
-# Arrêter les services
-make docker-down
-
-# Recréer la base (ATTENTION: supprime les données)
-make docker-down
-docker volume rm backend_postgres_data
-make docker-up
-make upgrade
-make seed
-```
-
-## Prochaines Étapes
-
-1. Module Products créé et testé
-2. Module Auth (authentification JWT)
-3. Module Orders (commandes)
-4. Module Shoppers (performance, notation)
-5. Module Wallet (portefeuilles)
-
-## Dépannage
-
-### MinIO ne démarre pas
-```bash
-docker-compose logs minio
-```
-
-### Base de données non accessible
-```bash
-docker-compose ps  # Vérifier que postgres est "healthy"
-docker-compose logs postgres
-```
-
-### Migration échoue
-```bash
-# Vérifier la connexion
-poetry run python -c "from app.core.config import settings; print(settings.DATABASE_URL)"
-```
-
+Le bucket par defaut est `makiti-assets`.

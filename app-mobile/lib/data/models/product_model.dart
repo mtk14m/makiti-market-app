@@ -1,6 +1,8 @@
 import '../../domain/entities/product.dart';
 
-/// Modèle de données pour Product (mapping API -> Entity)
+/// Modele de donnees pour les annonces marketplace.
+/// On conserve l'entite `Product` cote mobile pour eviter une refonte UI
+/// immediate, mais les donnees viennent maintenant de `/commerce/listings`.
 class ProductModel {
   final String id;
   final String name;
@@ -25,18 +27,31 @@ class ProductModel {
   });
 
   factory ProductModel.fromJson(Map<String, dynamic> json) {
+    final photoUrlsRaw = json['photo_urls'];
+    final photoUrls = photoUrlsRaw is List
+        ? photoUrlsRaw.whereType<String>().toList()
+        : const <String>[];
+    final coverImageUrl = json['cover_image_url'] as String?;
+    final legacyImageUrl = json['image_url'] as String?;
+    final resolvedImageUrl = coverImageUrl ??
+        legacyImageUrl ??
+        (photoUrls.isNotEmpty ? photoUrls.first : null);
+    final title = (json['title'] ?? json['name'] ?? '') as String;
+    final status = (json['status'] as String?)?.toLowerCase();
+
     return ProductModel(
       id: json['id'] as String,
-      name: json['name'] as String,
+      name: title,
       description: json['description'] as String?,
       price: (json['price'] as num).toDouble(),
       originalPrice: json['original_price'] != null
           ? (json['original_price'] as num).toDouble()
           : null,
-      imageUrl: json['image_url'] as String?,
+      imageUrl: resolvedImageUrl,
       category: json['category'] as String,
-      isAvailable: json['is_available'] as bool? ?? true,
-      unit: json['unit'] as String?,
+      isAvailable: json['is_available'] as bool? ?? status == 'published',
+      unit: (json['brand'] ?? json['size'] ?? json['condition'] ?? json['unit'])
+          as String?,
     );
   }
 
@@ -64,8 +79,8 @@ class ProductModel {
       originalPrice: originalPrice,
       imageUrl: imageUrl ?? '',
       category: category,
-      rating: 0.0, // L'API ne fournit pas de rating pour l'instant
-      reviewCount: 0, // L'API ne fournit pas de reviewCount pour l'instant
+      rating: 0.0,
+      reviewCount: 0,
       isAvailable: isAvailable,
       unit: unit,
     );
@@ -100,4 +115,3 @@ class ProductListResponse {
     );
   }
 }
-

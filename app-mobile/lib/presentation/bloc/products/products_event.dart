@@ -35,4 +35,7 @@ class SearchProducts extends ProductsEvent {
   List<Object?> get props => [query];
 }
 
+class LoadMoreProducts extends ProductsEvent {
+  const LoadMoreProducts();
+}
 

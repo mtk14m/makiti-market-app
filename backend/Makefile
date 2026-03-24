@@ -7,25 +7,25 @@ help: ## Show this help message
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "  %-15s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 install: ## Install dependencies
-	poetry install
+	uv sync
 
 dev-install: ## Install dependencies including dev dependencies
-	poetry install --with dev,test
+	uv sync --group dev --group test
 
 format: ## Format code with black
-	poetry run black app tests
+	uv run black app tests
 
 lint: ## Lint code with ruff
-	poetry run ruff check app tests
+	uv run ruff check app tests
 
 type-check: ## Type check with mypy
-	poetry run mypy app
+	uv run mypy app
 
 test: ## Run tests
-	poetry run pytest
+	uv run pytest
 
 test-cov: ## Run tests with coverage
-	poetry run pytest --cov=app --cov-report=html --cov-report=term-missing
+	uv run pytest --cov=app --cov-report=html --cov-report=term-missing
 
 clean: ## Clean cache and temporary files
 	find . -type d -name __pycache__ -exec rm -r {} +
@@ -35,45 +35,34 @@ clean: ## Clean cache and temporary files
 	rm -rf htmlcov .coverage
 
 docker-up: ## Start Docker containers
-	docker-compose up -d
+	docker compose -f ../docker-compose.yml up -d
 
 docker-down: ## Stop Docker containers
-	docker-compose down
+	docker compose -f ../docker-compose.yml down
 
 docker-logs: ## Show Docker logs
-	docker-compose logs -f
+	docker compose -f ../docker-compose.yml logs -f
 
 migrate: ## Create a new migration
-	poetry run alembic revision --autogenerate -m "$(msg)"
+	uv run alembic revision --autogenerate -m "$(msg)"
 
 upgrade: ## Run database migrations
-	poetry run alembic upgrade head
+	uv run alembic upgrade head
 
 downgrade: ## Rollback last migration
-	poetry run alembic downgrade -1
+	uv run alembic downgrade -1
 
 shell: ## Open Python shell
-	poetry run python -i
+	uv run python -i
 
 run: ## Run the development server
-	poetry run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+	uv run uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 worker: ## Run RQ worker
-	poetry run rq worker --url redis://localhost:6379/0
-
-seed: ## Seed products database
-	poetry run python scripts/seed_products.py
-
-upload-images: ## Upload product images from shared/assets/images to MinIO
-	poetry run python scripts/upload_local_images.py
+	uv run rq worker --url redis://localhost:6379/0
 
 setup-minio: ## Configure MinIO bucket for public read access
-	poetry run python scripts/setup_minio_public.py
+	uv run python scripts/setup_minio_public.py
 
 check-minio: ## Check objects in MinIO bucket
-	poetry run python scripts/check_minio_objects.py
-
-cleanup-minio: ## Clean up duplicate objects in MinIO
-	poetry run python scripts/cleanup_minio_duplicates.py
-
-
+	uv run python scripts/check_minio_objects.py

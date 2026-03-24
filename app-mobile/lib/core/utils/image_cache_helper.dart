@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 
 /// Helper pour gérer le cache des images
@@ -30,4 +29,3 @@ class ImageCacheHelper {
     return await imageCacheManager.getFileFromCache(url);
   }
 }
-

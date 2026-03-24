@@ -1,17 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/theme/app_spacing.dart';
-import '../bloc/products/products_bloc.dart';
-import '../bloc/cart/cart_bloc.dart';
+import '../../domain/entities/product.dart';
 import '../bloc/navigation/navigation_bloc.dart';
-import '../widgets/product_card.dart';
-import '../widgets/category_chip.dart';
-import '../widgets/promotion_card.dart';
-import '../widgets/delivery_header.dart';
+import '../bloc/products/products_bloc.dart';
+import '../widgets/product_grid_card.dart';
 import '../widgets/search_bar_enhanced.dart';
-import '../widgets/section_header.dart';
+import 'product_detail_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -21,7 +19,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String? selectedCategory;
+  static const tabs = ['Voir tout', 'Articles de créateurs', 'Electronique'];
+  String selectedTab = tabs.first;
 
   @override
   void initState() {
@@ -31,291 +30,281 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isSmallScreen = screenWidth < 375;
-    
     return Scaffold(
       backgroundColor: AppColors.backgroundLight,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Delivery Header
-            const DeliveryHeader(),
-            
-            // Barre de recherche améliorée
-            Padding(
-              padding: AppSpacing.paddingHorizontalLG,
-              child: BlocBuilder<ProductsBloc, ProductsState>(
-                builder: (context, state) {
-                  // Générer les suggestions dynamiques basées sur les produits disponibles
-                  List<String> getDynamicSuggestions(String query) {
-                    if (state is ProductsLoaded) {
-                      final queryLower = query.toLowerCase();
-                      // Extraire les noms de produits qui correspondent à la requête
-                      final matchingProducts = state.products
-                          .where((product) => product.name.toLowerCase().contains(queryLower))
-                          .map((product) => product.name)
-                          .toSet() // Éviter les doublons
-                          .toList();
-                      
-                      // Trier par pertinence (produits qui commencent par la requête en premier)
-                      matchingProducts.sort((a, b) {
-                        final aStartsWith = a.toLowerCase().startsWith(queryLower);
-                        final bStartsWith = b.toLowerCase().startsWith(queryLower);
-                        if (aStartsWith && !bStartsWith) return -1;
-                        if (!aStartsWith && bStartsWith) return 1;
-                        return a.compareTo(b);
-                      });
-                      
-                      return matchingProducts;
-                    }
-                    return [];
-                  }
+        child: BlocBuilder<ProductsBloc, ProductsState>(
+          builder: (context, state) {
+            final products = state is ProductsLoaded ? state.products : const <Product>[];
 
-                  return SearchBarEnhanced(
-                    hintText: 'Rechercher des produits...',
-                    onChanged: (value) {
-                      if (value.isEmpty) {
-                        // Si la recherche est vide, recharger tous les produits
-                        context.read<ProductsBloc>().add(const LoadProducts());
-                      } else {
-                        // Sinon, rechercher
-                        context.read<ProductsBloc>().add(SearchProducts(value));
-                      }
-                    },
-                    dynamicSuggestions: getDynamicSuggestions,
-                  );
-                },
-              ),
-            ),
-            
-            AppSpacing.gapMD,
-            
-            // Contenu scrollable
-            Expanded(
-              child: SingleChildScrollView(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-
-                    // Catégories horizontales
-                    SizedBox(
-                      height: 110,
-                      child: ListView(
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+                    child: SearchBarEnhanced(
+                      hintText: 'Rechercher un article ou un membre',
+                      onTap: () =>
+                          context.read<NavigationBloc>().add(NavigateToExplore()),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(0, 18, 0, 0),
+                    child: SizedBox(
+                      height: 38,
+                      child: ListView.separated(
+                        padding: const EdgeInsets.symmetric(horizontal: 20),
                         scrollDirection: Axis.horizontal,
-                        padding: AppSpacing.paddingHorizontalLG,
+                        itemCount: tabs.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 34),
+                        itemBuilder: (context, index) {
+                          final tab = tabs[index];
+                          final selected = tab == selectedTab;
+                          return GestureDetector(
+                            onTap: () => setState(() => selectedTab = tab),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  tab,
+                                  style: AppTextStyles.body.copyWith(
+                                    color: selected
+                                        ? AppColors.textPrimary
+                                        : AppColors.textSecondary,
+                                    fontWeight: selected
+                                        ? FontWeight.w500
+                                        : FontWeight.w500,
+                                  ),
+                                ),
+                                const Spacer(),
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 160),
+                                  height: 2,
+                                  width: selected ? 70 : 0,
+                                  color: AppColors.primary,
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Recommandé pour toi',
+                                style: AppTextStyles.h1.copyWith(fontSize: 28),
+                              ),
+                            ),
+                            TextButton(
+                              onPressed: () =>
+                                  context.read<NavigationBloc>().add(NavigateToExplore()),
+                              child: Text(
+                                'Tout voir',
+                                style: AppTextStyles.body.copyWith(
+                                  color: AppColors.primary,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        Text(
+                          'Une sélection de pièces visibles tout de suite, avec prix et protection inclus.',
+                          style: AppTextStyles.bodySecondary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                if (state is ProductsLoading)
+                  const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(40),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
+                  )
+                else if (state is ProductsError)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        color: AppColors.surfaceLight,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Impossible de charger les articles',
+                              style: AppTextStyles.h3.copyWith(
+                                color: AppColors.textPrimary,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              state.message,
+                              style: AppTextStyles.bodySecondary.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton(
+                                onPressed: () => context.read<ProductsBloc>().add(
+                                      const LoadProducts(),
+                                    ),
+                                child: const Text('Réessayer'),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                else if (products.isEmpty)
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        color: AppColors.surfaceLight,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Aucun article publié pour le moment',
+                              style: AppTextStyles.h3,
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Le backend répond peut-être, mais il ne renvoie encore aucun listing publié.',
+                              style: AppTextStyles.bodySecondary,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(20, 18, 20, 0),
+                    sliver: SliverGrid(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final product = products[index];
+                          return ProductGridCard(
+                            product: product,
+                            onPrimaryAction: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => ProductDetailPage(product: product),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                        childCount: products.length > 6 ? 6 : products.length,
+                      ),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 20,
+                        mainAxisSpacing: 24,
+                        childAspectRatio: 0.58,
+                      ),
+                    ),
+                  ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
+                    child: Container(
+                      height: 166,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFD8B59E),
+                        borderRadius: BorderRadius.zero,
+                      ),
+                      child: Stack(
                         children: [
-                          CategoryChip(
-                            label: 'Tout',
-                            icon: Icons.apps,
-                            isSelected: selectedCategory == null,
-                            onTap: () => _selectCategory(null),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(18, 18, 18, 18),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'NOUVEAU',
+                                  style: AppTextStyles.body.copyWith(
+                                    fontSize: 13,
+                                    color: AppColors.white,
+                                  ),
+                                ),
+                                const SizedBox(height: 14),
+                                Text(
+                                  'Découvre la mode\nde luxe',
+                                  style: AppTextStyles.h2.copyWith(
+                                    color: AppColors.white,
+                                    height: 1.2,
+                                  ),
+                                ),
+                                const Spacer(),
+                                SizedBox(
+                                  width: 180,
+                                  height: 44,
+                                  child: ElevatedButton(
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppColors.white,
+                                      foregroundColor: AppColors.textPrimary,
+                                      minimumSize: Size.zero,
+                                      padding: EdgeInsets.zero,
+                                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.zero,
+                                      ),
+                                    ),
+                                    onPressed: () {},
+                                    child: Text(
+                                      'Acheter maintenant',
+                                      style: AppTextStyles.body.copyWith(
+                                        fontSize: 15,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
-                          SizedBox(width: AppSpacing.md - AppSpacing.xs),
-                          CategoryChip(
-                            label: 'Légumes',
-                            icon: Icons.eco,
-                            isSelected: selectedCategory == 'Légumes',
-                            onTap: () => _selectCategory('Légumes'),
-                          ),
-                          SizedBox(width: AppSpacing.md - AppSpacing.xs),
-                          CategoryChip(
-                            label: 'Fruits',
-                            icon: Icons.apple,
-                            isSelected: selectedCategory == 'Fruits',
-                            onTap: () => _selectCategory('Fruits'),
-                          ),
-                          SizedBox(width: AppSpacing.md - AppSpacing.xs),
-                          CategoryChip(
-                            label: 'Viande',
-                            icon: Icons.set_meal,
-                            isSelected: selectedCategory == 'Viande',
-                            onTap: () => _selectCategory('Viande'),
-                          ),
-                          SizedBox(width: AppSpacing.md - AppSpacing.xs),
-                          CategoryChip(
-                            label: 'Épicerie',
-                            icon: Icons.shopping_bag,
-                            isSelected: selectedCategory == 'Épicerie',
-                            onTap: () => _selectCategory('Épicerie'),
-                          ),
-                          SizedBox(width: AppSpacing.md - AppSpacing.xs),
-                          CategoryChip(
-                            label: 'Produits laitiers',
-                            icon: Icons.agriculture,
-                            isSelected: selectedCategory == 'Produits laitiers',
-                            onTap: () => _selectCategory('Produits laitiers'),
-                          ),
-                          SizedBox(width: AppSpacing.md - AppSpacing.xs),
-                          CategoryChip(
-                            label: 'Boissons',
-                            icon: Icons.local_drink,
-                            isSelected: selectedCategory == 'Boissons',
-                            onTap: () => _selectCategory('Boissons'),
+                          Positioned(
+                            right: -12,
+                            bottom: 0,
+                            child: Icon(
+                              PhosphorIcons.handbag(),
+                              size: 120,
+                              color: AppColors.white.withValues(alpha: 0.35),
+                            ),
                           ),
                         ],
                       ),
                     ),
-
-                    AppSpacing.gapMD,
-
-                    // Section "Hot this week!"
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SectionHeader(
-                          title: 'À ne pas manquer !',
-                          onActionTap: () {
-                            context.read<NavigationBloc>().add(NavigateToShop());
-                          },
-                        ),
-                        AppSpacing.gapMD,
-                        SizedBox(
-                          height: 160,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            padding: AppSpacing.paddingHorizontalLG,
-                            children: const [
-                              PromotionCard(
-                                title: 'Livraison gratuite',
-                                subtitle: 'Profitez de la livraison gratuite sur toutes vos commandes',
-                              ),
-                              SizedBox(width: 16),
-                              PromotionCard(
-                                title: '15% sur votre première commande',
-                                subtitle: 'Utilisez le code PREMIER pour bénéficier de la réduction',
-                                discount: 15,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-
-                    AppSpacing.gapXL,
-
-                    // Section "Best for you"
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        SectionHeader(
-                          title: 'Pour vous',
-                          onActionTap: () {
-                            context.read<NavigationBloc>().add(NavigateToShop());
-                          },
-                        ),
-                        AppSpacing.gapMD,
-                        // Filtres horizontaux
-                        SizedBox(
-                          height: 40,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            padding: AppSpacing.paddingHorizontalLG,
-                            children: [
-                                _buildFilterChip('Sélection', true),
-                                SizedBox(width: AppSpacing.sm),
-                                _buildFilterChip('Nouveautés', false),
-                                SizedBox(width: AppSpacing.sm),
-                                _buildFilterChip('Essentiels', false),
-                                SizedBox(width: AppSpacing.sm),
-                                _buildFilterChip('Promotions', false),
-                            ],
-                          ),
-                        ),
-                        AppSpacing.gapMD,
-                        // Liste de produits
-                        BlocBuilder<ProductsBloc, ProductsState>(
-                          builder: (context, state) {
-                            if (state is ProductsLoading) {
-                              return const Center(
-                                child: Padding(
-                                  padding: AppSpacing.paddingXL,
-                                  child: CircularProgressIndicator(),
-                                ),
-                              );
-                            }
-                            if (state is ProductsLoaded) {
-                              return ListView.builder(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                padding: EdgeInsets.zero,
-                                itemCount: state.products.length,
-                                itemBuilder: (context, index) {
-                                  return Padding(
-                                    padding: EdgeInsets.only(
-                                      left: AppSpacing.paddingHorizontalLG.horizontal / 2,
-                                      right: AppSpacing.paddingHorizontalLG.horizontal / 2,
-                                      bottom: AppSpacing.md,
-                                    ),
-                                    child: ProductCard(
-                                      product: state.products[index],
-                                      onAddToCart: () {
-                                        context.read<CartBloc>().add(
-                                              AddToCart(state.products[index]),
-                                            );
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(
-                                              '${state.products[index].name} ajouté au panier',
-                                            ),
-                                            duration: const Duration(seconds: 1),
-                                          ),
-                                        );
-                                      },
-                                    ),
-                                  );
-                                },
-                              );
-                            }
-                            return const SizedBox.shrink();
-                          },
-                        ),
-                      ],
-                    ),
-
-                    SizedBox(height: AppSpacing.xxl + AppSpacing.xl), // Espace pour la bottom nav
-                  ],
+                  ),
                 ),
-              ),
-            ),
-          ],
+                const SliverToBoxAdapter(child: SizedBox(height: 120)),
+              ],
+            );
+          },
         ),
       ),
     );
-  }
-
-  Widget _buildFilterChip(String label, bool isSelected) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: () {
-          // TODO: Implémenter le changement de filtre
-        },
-        borderRadius: BorderRadius.circular(20),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          decoration: BoxDecoration(
-            color: isSelected ? AppColors.primary : AppColors.surfaceLight,
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Text(
-            label,
-            style: AppTextStyles.body.copyWith(
-              fontSize: 14,
-              fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
-              color: isSelected ? AppColors.textOnPrimary : AppColors.textPrimary,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _selectCategory(String? category) {
-    setState(() {
-      selectedCategory = selectedCategory == category ? null : category;
-    });
-    context.read<ProductsBloc>().add(FilterProducts(category: selectedCategory));
   }
 }
-

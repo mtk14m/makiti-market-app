@@ -52,3 +52,9 @@ async def client(db_session: AsyncSession) -> AsyncClient:
     app.dependency_overrides.clear()
 
 
+
+
+
+
+
+

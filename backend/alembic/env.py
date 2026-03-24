@@ -9,32 +9,24 @@ from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from alembic import context
 
-# Import your models here for autogenerate support
-from app.modules.products.models import Product  # noqa: F401
-from app.core.database import Base  # noqa: F401
+from app.core.database import Base
+from app.modules.auth.models import User  # noqa: F401
+from app.modules.commerce.models import Listing, PurchaseOrder  # noqa: F401
+from app.modules.logistics.models import Box, Parcel, Shipment  # noqa: F401
 
-# this is the Alembic Config object
 config = context.config
 
-# Interpret the config file for Python logging.
 if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
-# Import settings to get database URL
 from app.core.config import settings  # noqa: E402
 
-# Set the SQLAlchemy URL from settings (use asyncpg for async)
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"))
-
-# Import Base for autogenerate
-from app.core.database import Base  # noqa: E402
+config.set_main_option(
+    "sqlalchemy.url",
+    settings.DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://"),
+)
 
 target_metadata = Base.metadata
-
-# other values from the config, defined by the needs of env.py,
-# can be acquired:
-# my_important_option = config.get_main_option("my_important_option")
-# ... etc.
 
 
 def run_migrations_offline() -> None:
@@ -82,5 +74,4 @@ if context.is_offline_mode():
     run_migrations_offline()
 else:
     run_migrations_online()
-
 

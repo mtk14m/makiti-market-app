@@ -23,7 +23,7 @@ PUBLIC_READ_POLICY = """{
             "Effect": "Allow",
             "Principal": {"AWS": ["*"]},
             "Action": ["s3:GetObject"],
-            "Resource": ["arn:aws:s3:::products/*"]
+            "Resource": ["arn:aws:s3:::makiti-assets/*"]
         }
     ]
 }"""
@@ -65,4 +65,9 @@ def setup_public_access():
 if __name__ == "__main__":
     success = setup_public_access()
     sys.exit(0 if success else 1)
+
+
+
+
+
 

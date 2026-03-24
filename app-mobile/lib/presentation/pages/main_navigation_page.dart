@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import '../../core/theme/app_colors.dart';
 import '../bloc/navigation/navigation_bloc.dart';
 import '../widgets/bottom_nav_bar.dart';
 import 'home_page.dart';
-import 'shop_page.dart';
-import 'cart_page.dart';
+import 'explore_page.dart';
+import 'sell_page.dart';
+import 'messages_page.dart';
 import 'account_page.dart';
 
 class MainNavigationPage extends StatelessWidget {
@@ -23,14 +23,17 @@ class MainNavigationPage extends StatelessWidget {
           if (state is NavigationHome) {
             currentIndex = 0;
             currentPage = const HomePage();
-          } else if (state is NavigationShop) {
+          } else if (state is NavigationExplore) {
             currentIndex = 1;
-            currentPage = const ShopPage();
-          } else if (state is NavigationCart) {
+            currentPage = const ExplorePage();
+          } else if (state is NavigationSell) {
             currentIndex = 2;
-            currentPage = const CartPage();
-          } else if (state is NavigationAccount) {
+            currentPage = const SellPage();
+          } else if (state is NavigationMessages) {
             currentIndex = 3;
+            currentPage = const MessagesPage();
+          } else if (state is NavigationAccount) {
+            currentIndex = 4;
             currentPage = const AccountPage();
           }
 
@@ -44,12 +47,15 @@ class MainNavigationPage extends StatelessWidget {
                     context.read<NavigationBloc>().add(NavigateToHome());
                     break;
                   case 1:
-                    context.read<NavigationBloc>().add(NavigateToShop());
+                    context.read<NavigationBloc>().add(NavigateToExplore());
                     break;
                   case 2:
-                    context.read<NavigationBloc>().add(NavigateToCart());
+                    context.read<NavigationBloc>().add(NavigateToSell());
                     break;
                   case 3:
+                    context.read<NavigationBloc>().add(NavigateToMessages());
+                    break;
+                  case 4:
                     context.read<NavigationBloc>().add(NavigateToAccount());
                     break;
                 }
@@ -61,5 +67,3 @@ class MainNavigationPage extends StatelessWidget {
     );
   }
 }
-
-

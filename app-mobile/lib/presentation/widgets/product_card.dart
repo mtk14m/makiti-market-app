@@ -9,35 +9,18 @@ import 'package:intl/intl.dart';
 
 class ProductCard extends StatelessWidget {
   final Product product;
-  final VoidCallback onAddToCart;
+  final VoidCallback onPrimaryAction;
 
   const ProductCard({
     super.key,
     required this.product,
-    required this.onAddToCart,
+    required this.onPrimaryAction,
   });
 
   String _formatPrice(double price) {
     // Format pour FCFA (Franc CFA) - devise ouest-africaine
     final formatter = NumberFormat('#,##0', 'fr_FR');
     return '${formatter.format(price)} FCFA';
-  }
-
-  String _getUnitLabel() {
-    // Retourne l'unité ou une unité par défaut selon le contexte
-    if (product.unit != null && product.unit!.isNotEmpty) {
-      return product.unit!;
-    }
-    // Unités courantes au marché ouest-africain
-    if (product.category.toLowerCase().contains('viande') ||
-        product.category.toLowerCase().contains('poisson')) {
-      return 'kg';
-    }
-    if (product.category.toLowerCase().contains('légume') ||
-        product.category.toLowerCase().contains('fruit')) {
-      return 'kg';
-    }
-    return 'pièce';
   }
 
   @override
@@ -155,7 +138,7 @@ class ProductCard extends StatelessWidget {
                       ),
                       SizedBox(width: AppSpacing.xs),
                       Text(
-                        '/ ${_getUnitLabel()}',
+                        product.category,
                         style: AppTextStyles.bodySecondary.copyWith(
                           fontSize: 12,
                           color: AppColors.textSecondary,
@@ -164,7 +147,7 @@ class ProductCard extends StatelessWidget {
                     ],
                   ),
                   SizedBox(height: AppSpacing.xs),
-                  // Badge fraîcheur et disponibilité
+                  // Etat de disponibilite
                   Row(
                     children: [
                       if (product.isAvailable)
@@ -178,7 +161,7 @@ class ProductCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(AppSpacing.xs),
                           ),
                           child: Text(
-                            'Frais du jour',
+                            'Disponible',
                             style: AppTextStyles.bodySecondary.copyWith(
                               fontSize: 10,
                               fontWeight: FontWeight.w500,
@@ -212,11 +195,11 @@ class ProductCard extends StatelessWidget {
               ),
             ),
             SizedBox(width: AppSpacing.xs),
-            // Bouton Add - plus compact
+            // Bouton principal
             Material(
               color: Colors.transparent,
               child: InkWell(
-                onTap: product.isAvailable ? onAddToCart : null,
+                onTap: product.isAvailable ? onPrimaryAction : null,
                 borderRadius: BorderRadius.circular(20), // 20px pour cercle de 40px
                 child: Container(
                   width: 40,
@@ -237,7 +220,7 @@ class ProductCard extends StatelessWidget {
                         : null,
                   ),
                   child: Icon(
-                    Icons.add,
+                    Icons.arrow_forward,
                     color: product.isAvailable
                         ? AppColors.textOnPrimary
                         : AppColors.textTertiary,
@@ -252,4 +235,3 @@ class ProductCard extends StatelessWidget {
     );
   }
 }
-

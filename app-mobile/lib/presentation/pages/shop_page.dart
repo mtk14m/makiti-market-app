@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_text_styles.dart';
-import '../../core/theme/app_spacing.dart';
 import '../bloc/products/products_bloc.dart';
-import '../bloc/cart/cart_bloc.dart';
-import '../widgets/product_card.dart';
-import '../widgets/category_chip.dart';
-import '../widgets/search_bar_enhanced.dart';
+import 'product_detail_page.dart';
 import '../widgets/empty_state.dart';
-import '../widgets/section_header.dart';
-import '../../core/theme/app_animations.dart';
+import '../widgets/product_grid_card.dart';
+import '../widgets/search_bar_enhanced.dart';
 
 class ShopPage extends StatefulWidget {
   const ShopPage({super.key});
@@ -20,244 +17,194 @@ class ShopPage extends StatefulWidget {
 }
 
 class _ShopPageState extends State<ShopPage> {
-  String? selectedCategory;
+  static const List<String> _filters = [
+    'Tout',
+    'Mode',
+    'Chaussures',
+    'Beauty',
+    'Tech',
+    'Maison',
+  ];
+
+  String _selectedFilter = _filters.first;
 
   @override
   void initState() {
     super.initState();
     context.read<ProductsBloc>().add(const LoadProducts());
-    selectedCategory = null;
   }
 
+  void _applyFilter(String filter) {
+    setState(() {
+      _selectedFilter = filter;
+    });
+
+    if (filter == 'Tout') {
+      context.read<ProductsBloc>().add(const LoadProducts());
+    } else {
+      context.read<ProductsBloc>().add(SearchProducts(filter));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundLight,
-      appBar: AppBar(
-        backgroundColor: AppColors.backgroundLight,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: Text(
-          'Boutique',
-          style: AppTextStyles.h2.copyWith(color: AppColors.primaryDark),
-        ),
-      ),
+      backgroundColor: AppColors.surfaceLight,
       body: SafeArea(
-        child: Column(
-          children: [
-            // Barre de recherche améliorée
-            Padding(
-              padding: AppSpacing.paddingHorizontalLG,
-              child: BlocBuilder<ProductsBloc, ProductsState>(
-                builder: (context, state) {
-                  // Générer les suggestions dynamiques basées sur les produits disponibles
-                  List<String> getDynamicSuggestions(String query) {
-                    if (state is ProductsLoaded) {
-                      final queryLower = query.toLowerCase();
-                      // Extraire les noms de produits qui correspondent à la requête
-                      final matchingProducts = state.products
-                          .where((product) => product.name.toLowerCase().contains(queryLower))
-                          .map((product) => product.name)
-                          .toSet() // Éviter les doublons
-                          .toList();
-                      
-                      // Trier par pertinence (produits qui commencent par la requête en premier)
-                      matchingProducts.sort((a, b) {
-                        final aStartsWith = a.toLowerCase().startsWith(queryLower);
-                        final bStartsWith = b.toLowerCase().startsWith(queryLower);
-                        if (aStartsWith && !bStartsWith) return -1;
-                        if (!aStartsWith && bStartsWith) return 1;
-                        return a.compareTo(b);
-                      });
-                      
-                      return matchingProducts;
-                    }
-                    return [];
-                  }
-
-                  return SearchBarEnhanced(
-                    hintText: 'Rechercher des produits...',
-                    onChanged: (value) {
-                      if (value.isEmpty) {
-                        // Si la recherche est vide, recharger les produits avec le filtre de catégorie actuel
-                        context.read<ProductsBloc>().add(FilterProducts(category: selectedCategory));
-                      } else {
-                        // Sinon, rechercher (la recherche ignore le filtre de catégorie)
-                        context.read<ProductsBloc>().add(SearchProducts(value));
-                      }
-                    },
-                    dynamicSuggestions: getDynamicSuggestions,
+        child: CustomScrollView(
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Catalogue',
+                      style: AppTextStyles.h2.copyWith(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                    const SizedBox(height: 14),
+                    SearchBarEnhanced(
+                      hintText: 'Rechercher une annonce...',
+                      onChanged: (value) {
+                        if (value.isEmpty) {
+                          context.read<ProductsBloc>().add(const LoadProducts());
+                        } else {
+                          context.read<ProductsBloc>().add(SearchProducts(value));
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 14),
+                    SizedBox(
+                      height: 42,
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: _filters.length,
+                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        itemBuilder: (context, index) {
+                          final filter = _filters[index];
+                          return _ExploreFilterChip(
+                            label: filter,
+                            selected: _selectedFilter == filter,
+                            onTap: () => _applyFilter(filter),
+                          );
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            BlocBuilder<ProductsBloc, ProductsState>(
+              builder: (context, state) {
+                if (state is ProductsLoading) {
+                  return const SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.all(40),
+                      child: Center(child: CircularProgressIndicator()),
+                    ),
                   );
-                },
-              ),
-            ),
-            
-            AppSpacing.gapMD,
+                }
 
-            // Catégories filtres
-            SizedBox(
-              height: 110,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                padding: AppSpacing.paddingHorizontalLG,
-                children: [
-                  CategoryChip(
-                    label: 'Tout',
-                    icon: Icons.apps,
-                    isSelected: selectedCategory == null,
-                    onTap: () => _selectCategory(null),
-                  ),
-                  SizedBox(width: AppSpacing.md - AppSpacing.xs),
-                  CategoryChip(
-                    label: 'Légumes',
-                    icon: Icons.eco,
-                    isSelected: selectedCategory == 'Légumes',
-                    onTap: () => _selectCategory('Légumes'),
-                  ),
-                  SizedBox(width: AppSpacing.md - AppSpacing.xs),
-                  CategoryChip(
-                    label: 'Fruits',
-                    icon: Icons.apple,
-                    isSelected: selectedCategory == 'Fruits',
-                    onTap: () => _selectCategory('Fruits'),
-                  ),
-                  SizedBox(width: AppSpacing.md - AppSpacing.xs),
-                  CategoryChip(
-                    label: 'Viande',
-                    icon: Icons.set_meal,
-                    isSelected: selectedCategory == 'Viande',
-                    onTap: () => _selectCategory('Viande'),
-                  ),
-                  SizedBox(width: AppSpacing.md - AppSpacing.xs),
-                  CategoryChip(
-                    label: 'Épicerie',
-                    icon: Icons.shopping_bag,
-                    isSelected: selectedCategory == 'Épicerie',
-                    onTap: () => _selectCategory('Épicerie'),
-                  ),
-                  SizedBox(width: AppSpacing.md - AppSpacing.xs),
-                  CategoryChip(
-                    label: 'Produits laitiers',
-                    icon: Icons.agriculture,
-                    isSelected: selectedCategory == 'Produits laitiers',
-                    onTap: () => _selectCategory('Produits laitiers'),
-                  ),
-                  SizedBox(width: AppSpacing.md - AppSpacing.xs),
-                  CategoryChip(
-                    label: 'Boissons',
-                    icon: Icons.local_drink,
-                    isSelected: selectedCategory == 'Boissons',
-                    onTap: () => _selectCategory('Boissons'),
-                  ),
-                ],
-              ),
-            ),
+                if (state is ProductsError) {
+                  return SliverToBoxAdapter(
+                    child: EmptyState(
+                      icon: Icons.error_outline,
+                      title: 'Erreur de chargement',
+                      subtitle: state.message,
+                    ),
+                  );
+                }
 
-            AppSpacing.gapMD,
-
-            // Section Header
-            SectionHeader(
-              title: 'Produits',
-              subtitle: selectedCategory != null 
-                  ? 'Catégorie : $selectedCategory' 
-                  : 'Tous les produits',
-            ),
-            
-            AppSpacing.gapSM,
-
-            // Liste des produits
-            Expanded(
-              child: BlocBuilder<ProductsBloc, ProductsState>(
-                builder: (context, state) {
-                  if (state is ProductsLoading) {
-                    return const Center(
-                      child: Padding(
-                        padding: AppSpacing.paddingXL,
-                        child: CircularProgressIndicator(),
+                if (state is ProductsLoaded) {
+                  if (state.products.isEmpty) {
+                    return const SliverToBoxAdapter(
+                      child: EmptyState(
+                        icon: Icons.inventory_2_outlined,
+                        title: 'Aucune annonce trouvee',
+                        subtitle: 'Essaie une autre recherche ou un autre filtre.',
                       ),
                     );
                   }
-                  if (state is ProductsError) {
-                    return Center(
-                      child: Padding(
-                        padding: AppSpacing.paddingXL,
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.error_outline,
-                              size: 48,
-                              color: AppColors.textSecondary,
-                            ),
-                            SizedBox(height: AppSpacing.md),
-                            Text(
-                              'Erreur',
-                              style: AppTextStyles.h2,
-                            ),
-                            SizedBox(height: AppSpacing.sm),
-                            Text(
-                              state.message,
-                              style: AppTextStyles.bodySecondary,
-                              textAlign: TextAlign.center,
-                            ),
-                            SizedBox(height: AppSpacing.lg),
-                            ElevatedButton(
-                              onPressed: () {
-                                context.read<ProductsBloc>().add(const LoadProducts());
-                              },
-                              child: const Text('Réessayer'),
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  }
-                  if (state is ProductsLoaded) {
-                    if (state.products.isEmpty) {
-                      return EmptyState(
-                        icon: Icons.search_off,
-                        title: 'Aucun produit trouvé',
-                        subtitle: 'Essayez une autre recherche ou catégorie',
-                      );
-                    }
-                    return ListView.builder(
-                      padding: AppSpacing.paddingHorizontalLG,
-                      itemCount: state.products.length,
-                      itemBuilder: (context, index) {
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: AppSpacing.md),
-                          child: ProductCard(
-                            product: state.products[index],
-                            onAddToCart: () {
-                              context.read<CartBloc>().add(
-                                    AddToCart(state.products[index]),
-                                  );
-                              context.showAnimatedSnackBar(
-                                '${state.products[index].name} ajouté au panier',
-                                backgroundColor: AppColors.primaryDark,
+
+                  return SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 18, 16, 120),
+                    sliver: SliverGrid(
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final item = state.products[index];
+                          return ProductGridCard(
+                            product: item,
+                            onPrimaryAction: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (context) => ProductDetailPage(
+                                    product: item,
+                                  ),
+                                ),
                               );
                             },
-                          ),
-                        );
-                      },
-                    );
-                  }
-                  return const SizedBox.shrink();
-                },
-              ),
+                          );
+                        },
+                        childCount: state.products.length,
+                      ),
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 2,
+                        crossAxisSpacing: 10,
+                        mainAxisSpacing: 16,
+                        childAspectRatio: 0.66,
+                      ),
+                    ),
+                  );
+                }
+
+                return const SliverToBoxAdapter(child: SizedBox.shrink());
+              },
             ),
           ],
         ),
       ),
     );
   }
-
-  void _selectCategory(String? category) {
-    setState(() {
-      selectedCategory = category;
-    });
-    context.read<ProductsBloc>().add(FilterProducts(category: category));
-  }
 }
 
+class _ExploreFilterChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  const _ExploreFilterChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(999),
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primaryDark : AppColors.surfaceLight,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: selected ? AppColors.primaryDark : AppColors.cardBorder,
+          ),
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.bodySecondary.copyWith(
+            fontSize: 12,
+            color: selected ? AppColors.white : AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+    );
+  }
+}

@@ -1,31 +1,40 @@
 import 'dart:io';
 
-/// Configuration de l'API
+/// Configuration de l'API Makiti
+///
+/// CONCEPT : Centraliser la config pour éviter les URLs en dur.
+/// baseUrlOverride permet de tester sur device physique (téléphone réel).
 class ApiConfig {
   ApiConfig._();
 
-  // URL de base de l'API
-  // Pour iOS simulator: localhost fonctionne
-  // Pour Android emulator: utiliser 10.0.2.2 au lieu de localhost
-  // Pour device physique: utiliser l'IP locale de votre machine (ex: 192.168.1.100)
+  /// Remplace l'URL automatique si défini.
+  /// À utiliser pour tester sur device physique :
+  ///   ApiConfig.baseUrlOverride = 'http://192.168.1.100:8000/api/v1';
+  /// Puis flutter run sur ton téléphone connecté au même réseau WiFi.
+  static String? baseUrlOverride;
+
+  /// URL de base de l'API
+  ///
+  /// - iOS simulator : localhost fonctionne (le simu partage le réseau du Mac)
+  /// - Android emulator : 10.0.2.2 = localhost de la machine hôte
+  /// - Device physique : utiliser baseUrlOverride avec l'IP de ton Mac
   static String get baseUrl {
-    // Détection automatique de la plateforme
+    if (baseUrlOverride != null && baseUrlOverride!.isNotEmpty) {
+      return baseUrlOverride!;
+    }
     if (Platform.isAndroid) {
-      // Android emulator utilise 10.0.2.2 pour accéder à localhost de la machine hôte
       return 'http://10.0.2.2:8000/api/v1';
     } else {
-      // iOS simulator et autres plateformes
-      return 'http://localhost:8000/api/v1';
+      return 'http://127.0.0.1:8000/api/v1';
     }
   }
-  
-  // Timeout pour les requêtes HTTP (en secondes)
+
+  /// Timeout pour les requêtes HTTP (en secondes)
   static const int timeoutSeconds = 30;
-  
-  // Headers par défaut
+
+  /// Headers par défaut pour toutes les requêtes API
   static Map<String, String> get defaultHeaders => {
         'Content-Type': 'application/json',
         'Accept': 'application/json',
       };
 }
-
